@@ -19,25 +19,18 @@
 #
 
 
-execute "yum-update" do
-  command "yum update"
+execute "apt-get" do
+  command "apt-get update"
 end
 
-dependencies = %w{alsa-lib.i686 fontconfig.i686 freetype.i686 glib2.i686 libSM.i686 libXScrnSaver.i686 libXi.i686 libXrandr.i686 libXrender.i686 libXv.i686 libstdc++.i686 pulseaudio-libs.i686 qt.i686 qt-x11.i686 zlib.i686}
+dependencies = %w{libasound2 libqt4-dbus libqt4-network libqt4-xml libqtcore4 libqtgui4 libqtwebkit4 libxss1 libxv1}
 
 dependencies.each do |pkg|
-  yum_package pkg do
+  apt_package pkg do
     action :install
   end
 end
 
-directory node[:skype][:install_dir] do
-  owner "root"
-  group "root"
-  mode "0755"
-  action :create
-  not_if "Dir.exists?(#{node[:skype][:install_dir]})"
-end
 
 #download skype
 bash "download_skype" do
@@ -45,25 +38,7 @@ bash "download_skype" do
   cwd node[:skype][:temp_dir]
   code <<-EOH
   wget -c #{node[:skype][:url]} -O #{node[:skype][:filename]}
-  tar xvf #{node[:skype][:filename]} -C #{node[:skype][:install_dir]} --strip-components=1
+dpkg -i #{node[:skype][:filename]}
   EOH
 end
 
-link "/usr/share/applications/skype.desktop" do
-  to "#{node[:skype][:install_dir]}"+"/"+"skype.desktop"
-end
-
-link "/usr/share/icons/skype.png" do
-  to "#{node[:skype][:install_dir]}"+"/"+"icons/SkypeBlue_48x48.png"
-end
-
-link "/usr/share/pixmaps/skype.png" do
-  to "#{node[:skype][:install_dir]}"+"/"+"icons/SkypeBlue_48x48.png"
-end
-
-template "/usr/bin/skype" do
-  owner "root"
-  group "root"
-  mode "0755"
-  source "skype.erb"
-end
